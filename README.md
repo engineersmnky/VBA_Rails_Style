@@ -43,8 +43,7 @@ Usage:
        v.value = 123
        v.name = "Number"
 
-
-       ^^^ is the same as v.validates 123,"Number"
+ ^^^ is the same as `v.validates 123,"Number"`
 
        v.numericality only_integer:=True, greater_than_or_equal_to:=11
        v.stringness length:=6, contains:="ing", begins_with:="S"
