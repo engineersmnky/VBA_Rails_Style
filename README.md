@@ -3,11 +3,11 @@ VBA_Rails_Style
 
 Rails Style Validation for VBA
 
-Designed By engineersmnky 10/4/2013
-
 Validator acts as a validation engine for VBA Applications
 
-Validators formatting was inspired by Rails validations and uses as similar a foramtting style as possible
+Validators formatting was inspired by Rails validations and uses as similar a formatting style as possible 
+
+(Although it is still a work in progess)
 
 It must be used in conjunction with ValidatorError which will hold the name and error messgae for each object that fails validation
  
