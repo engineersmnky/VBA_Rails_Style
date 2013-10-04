@@ -9,7 +9,7 @@ Validators formatting was inspired by Rails validations and uses as similar a fo
 
 (Although it is still a work in progess)
 
-It must be used in conjunction with ValidatorError which will hold the name and error messgae for each object that fails validation
+It must be used in conjunction with ValidatorError which will hold the name and error message for each object that fails validation
  
 Validator includes multiple methods for retreiving these error including
  
