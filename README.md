@@ -13,6 +13,7 @@ It must be used in conjunction with ValidatorErrors which will hold the name and
  error_keys - returns only the name for objects that failed validation
  uniq_keys - returns a unique collection of errors based on name so only the first failed validation for a named object will be included in this collection
 Usage:
+
        Dim v As New Validator
        With v
             .validates 123, "Number", numericalityOf:=True, only_integer:=True, greater_than_or_equal_to:=11
@@ -20,26 +21,35 @@ Usage:
             .validates "12345","Number2",numericalityOf:=True, greater_than:=12344, force:=vbInteger, stringnessOf:=True, min_length:=3, begins_with:="1"
        End With
 
+
        If v.is_valid Then
            Do Something
        Else
            Do something Else
        End If
+       
  Alternate Usage:
+ 
        Dim v As New Validator
        v.value = 123
        v.name = "Number"
+
+
        ^^^ is the same as v.validates 123,"Number"
 
        v.numericality only_integer:=True, greater_than_or_equal_to:=11
        v.stringness length:=6, contains:="ing", begins_with:="S"
        v.dateness 
+       
  Each validates call returns a Boolean so you can use this in conditionals as well.
+ 
+ 
        If v.stringness(length:=2) then
            Msgbox "String is 2 Characters Long."
        Else
             Msgbox "String is not 2 Characters Long."
        End If
+
 
  Custom Validation:
    If you find the builtin methods are not enough to handle your validation it comes with a .custom_validation function which allows you to 
