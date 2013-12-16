@@ -499,10 +499,10 @@ On Error GoTo Failure
             result = result And append_error(check_length(length), "must be " & length & " character(s) long.")
         ElseIf min_length >= 0 Or max_length > 0 Then
             If min_length >= 0 Then
-                 result = result And append_error(check_length(length, min:=True), "must be atleast " & min_length & " character(s) long.")
+                 result = result And append_error(check_length(min_length, min:=True), "must be atleast " & min_length & " character(s) long.")
             End If
             If max_length > 0 Then
-                 result = result And append_error(check_length(length, max:=True), "must be no more than " & max_length & " character(s) long.")
+                 result = result And append_error(check_length(max_length, max:=True), "must be no more than " & max_length & " character(s) long.")
             End If
         End If
         If string_supplied(begins_with) Then
