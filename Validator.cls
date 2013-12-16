@@ -8,89 +8,44 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 
-
-'Designed By engineersmnky 10/4/2013
-'Validator acts as a validation engine for VBA Applications
-'Validator's formatting was inspired by Rails validations and uses as similar a foramtting style as possible
-'It must be used in conjunction with ValidatorErrors which will hold the name and error messgae for each object that fails validation
-' Validator includes multiple methods for retreiving these error including
-' errors - Which returns the full collection of Errors
-' error_messages - which returns only the messages for objects that failed validation
-' error_keys - returns only the name for objects that failed validation
-' uniq_keys - returns a unique collection of errors based on name so only the first failed validation for a named object will be included in this collection
-'Usage:
-'       Dim v As New Validator
-'       With v
-'            .validates 123, "Number", numericalityOf:=True, only_integer:=True, greater_than_or_equal_to:=11
-'            .validates "String", "String", stringnessOf:=True, length:=6, contains:="ing", begins_with:="S"
-'            .validates "12345","Number2",numericalityOf:=True, greater_than:=12344, force:=vbInteger, stringnessOf:=True, min_length:=3, begins_with:="1"
-'       End With
-'
-'       If v.is_valid Then
-'           Do Something
-'       Else
-'           Do something Else
-'       End If
-' Alternate Usage:
-'       Dim v As New Validator
-'       v.value = 123
-'       v.name = "Number"
-'       ^^^ is the same as v.validates 123,"Number"
-'
-'       v.numericality only_integer:=True, greater_than_or_equal_to:=11
-'       v.stringness length:=6, contains:="ing", begins_with:="S"
-'       v.dateness 
-' Each validates call returns a Boolean so you can use this in conditionals as well.
-'       If v.stringness(length:=2) then
-'           Msgbox "String is 2 Characters Long."
-'       Else
-'            Msgbox "String is not 2 Characters Long."
-'       End If
-'
-' Custom Validation:
-'   If you find the builtin methods are not enough to handle your validation it comes with a .custom_validation function which allows you to 
-'       specify a Boolean statement with an optional name and error_message
-'
-
-
 Private pname As String
 Private test_val As Variant
 Private error_list As New Collection
-Private true_val As Variant
-
-
 'returns the current test name
 Public Property Get name() As String
     name = pname
 End Property
-
 'name allows you to change the name without changing the test value
 Public Property Let name(value As String)
     pname = value
 End Property
-
-'returns the current true value
+'returns the current test value
 Public Property Get value() As Variant
-    value = true_val
+    value = test_val
 End Property
-
-'returns the current test value may be different data type based on test specifications
-Public Property Get test_value() As Variant
-    test_value = test_val
-End Property
-
 'value allows you to change the value without changing the name
 Public Property Let value(value As Variant)
-    true_val = val
-    test_val = true_val
+    test_val = value
 End Property
-
 'errors() returns the full error collection with field and error
 Public Property Get errors() As Collection
     Set errors = error_list
 End Property
+'valid returns the validtiy of the complete validation
+Public Property Get is_valid() As Boolean
+    is_valid = Not (error_list.Count > 0)
+End Property
 
-
+' validates allows you to set a values and an optional name for each validation
+' example: validates 123.45, "Number"
+Public Sub validates(value As Variant, Optional name As String = "")
+    test_val = value
+    pname = name
+End Sub
+Public Sub custom_validation(valid As Boolean, Optional name As String, Optional message As String)
+    pname = name
+    append_error valid, message
+End Sub
 'error_messages returns just the errors for the error collection
 Public Function error_messages() As Collection
     Dim messages As New Collection
@@ -100,7 +55,6 @@ Public Function error_messages() As Collection
     Next e
     Set error_messages = messages
 End Function
-
 'error_keys() returns just the keys for error collection
 Public Function error_keys() As Collection
     Dim keys As New Collection
@@ -110,7 +64,6 @@ Public Function error_keys() As Collection
     Next e
     Set error_keys = keys
 End Function
-
 'returns only unique names that failed validation good for flagging fields after validation failure
 Public Function uniq_keys() As Collection
 On Error Resume Next
@@ -123,106 +76,13 @@ On Error Resume Next
     Next e
     Set uniq_keys = unique_errors
 End Function
-
-
-'valid returns the validtiy of the complete validation
-Public Property Get is_valid() As Boolean
-    is_valid = Not (error_list.Count > 0)
-End Property
-
-' validates allows you to set a values and an optional name for each validation
-' Options are:
-'       Shared:
-'            allow_null (Boolean) - returns true for validation even if value is null * Does not apply to presence
-'            other_than (Variant) - returns true if the value is something other than what is specified * Shared By numericality and dateness
-'       presenceOf: 
-'           returns true is object has a value
-'       numericalityOf options:(Default=False)
-'           only_integer (Boolean) - checks to see if val is a vbInteger
-'           allow_null (Boolean) - this is the only option that does not require a number as it will return its own value if val is Null
-'           is_equal_to (Variant) - checks to see if test_val = is_equal_to
-'           greater_than (Variant) - will check to see if val is greater than this value and return (takes presidence over _or_equal_to)
-'           greater_than_or_equal_to (Variant) - same a greater than but with an equality check
-'           less_than (Variant) - will check to see if a value is less than this value and return (takes presidence over _or_equal_to)
-'           less_than_or_equal_to (Variant) - same as less than with an equality check
-'           odd (Boolean) - checks to see if val is odd if True
-'           even (Boolean) - checks to see if a val is even if True
-'           is_type (VBA.vbVarType) - checks to see if val is of a specific data_type
-'           force(VBA.VbVarType) - attempts to force test_val to a specified data-type prior to testing 
-'                     * This value can be retrieved afterwards with .test_value (unless used with stringness strict:=False(Default))
-'
-'       stringnessOf options: (Default=False)
-'           allow_blank (Boolean) - this is similar to allow_null only it will fail if the sting is null but pass if it is an empty string ""
-'           length(Integer) - check if the string is a specified length
-'           min_length(Integer) - check if the length of a string is greater than or equal to min length
-'           max_length(Integer) - check is a string is short than or equal to max length
-'           begins_with (String) - Check is a string begins with a specified string
-'           ends_with (String) - Check is a string ends with a specified string (can be used with case_sensitive)
-'           contains (String) - Check is a string contains a specified string (can be used with case_sensitive)
-'           matches (String) - Check is a string matches a given regex pattern (case sensitive has no effect on this method)
-'           case_sensitive (Boolean) - to be used in conjunction with begins_with, ends_with, and contains
-'           strict (Boolean) - if strict it validates test_val as is otherwise it attempts to make it a string before testing  
-'                   *This value can be retrieved afterwards with .test_value (overrides numericality force)
-''
-'       datenessOf options:(Default=False)
-'           allow_null (Boolean) - this is the only option that does not require a date as it will return its own value if test_val is Null
-'           after (Date) - will check to see if test_val is after this value and return (takes presidence over on_or_)
-'           on_or_after (Date) - same a after but with an equality check
-'           before(Date) - will check to see if a value is before this value and return (takes presidence over on_or_)
-'           on_or_before (Date) - same as before with an equality check
-'
-' example: validates 123.45, "Number", [Options]
-Public Function validates(value As Variant, Optional name As String, _
-    Optional presenceOf As Boolean = False, _
-    Optional numericalityOf As Boolean = False, _
-    Optional only_integer As Boolean = False, Optional allow_null As Boolean = False, _
-    Optional is_equal_to As Variant, Optional greater_than As Variant, _
-    Optional greater_than_or_equal_to As Variant, Optional less_than As Variant, _
-    Optional less_than_or_equal_to As Variant, Optional other_than As Variant, _
-    Optional odd As Boolean = False, Optional even As Boolean = False, _
-    Optional is_type As VBA.VbVarType, Optional force As VBA.VbVarType, _
-    Optional datenessOf As Boolean = False, _
-    Optional after As Date, Optional on_or_after As Date, _
-    Optional before As Date, Optional on_or_before As Date, _
-    Optional stringnessOf As Boolean = False, _
-    Optional allow_blank As Boolean = False, Optional length As Integer = -1, _
-    Optional min_length As Integer = -1, Optional max_length As Integer = -1, _
-    Optional begins_with As String, Optional ends_with As String, _
-    Optional contains As String, Optional matches As String, _
-    Optional case_sensitive As Boolean = False, _
-    Optional strict As Boolean = False _
-    ) As Boolean
-    
-    Dim result As Boolean
-    
-    true_val = value
-    test_val = true_val
-    
-    pname = name
-    result = True
-    If presenceOf Then
-        result = result And presence
-    End If
-    If numericalityOf Then
-        result = result And numericality(only_integer, allow_null, is_equal_to, greater_than, greater_than_or_equal_to, _
-                                         less_than, less_than_or_equal_to, other_than, odd, even, is_type, force)
-    End If
-    If stringnessOf Then
-        result = result And stringness(allow_null, allow_blank, length, min_length, max_length, begins_with, ends_with, contains, matches, case_sensitive, strict)
-    End If
-    If datenessOf Then
-        result = result And dateness(allow_null, after, on_or_after, before, on_or_before, CDate(other_than))
-    End If
-
-    validates = result
+'Checks if an item exists in a colleciton by catching the non existent Error
+Private Function in_collection(coll As Collection, key As String) As Boolean
+On Error Resume Next
+    Err.Clear
+    coll.Item (key)
+    in_collection = Not (CLng(Err.Number) = 5)
 End Function
-
-Public Function custom_validation(valid As Boolean, Optional name As String, Optional message As String) As Boolean
-    pname = name
-    append_error valid, message
-    custom_validation = valid
-End Function
-
 
 '[BEGIN]============================================numericality====================================================[BEGIN]
 'Check a number field for validation purposes numericality returns true based on the supplied parameters
@@ -239,7 +99,6 @@ End Function
 'odd (Boolean) - checks to see if val is odd if True
 'even (Boolean) - checks to see if a val is even if True
 'is_type (VBA.vbVarType) - checks to see if val is of a specific data_type
-'force(VBA.VbVarType) - attempts to force test_val to a specified data-type prior to testing
 
 'Options can be used in conjunction with each other
 'example: numericality only_integer:=True,greater_than:=11,less_than:=22
@@ -371,17 +230,14 @@ End Function
 '[END]===========================================numericality=====================================================[END]
 
 
-'[BEGIN]=============================================presence====================================================[BEGIN]
+'==================================================presence===========================================================
 'presenceOf - checks to make sure the validation element is not null and have a length of greater than 0
 
 Public Function presence() As Boolean
-    presence = append_error(Len(IIf(IsNull(test_val) Or test_val = vbNull, "", test_val)) > 0, "must have a value.")
+    presence = append_error(Len(test_val) > 0, "must have a value.")
 End Function
-'[END]=============================================presence====================================================[END]
 
-
-
-'[BEGIN]==============================================dateness=====================================================[BEGIN]
+'==================================================dateness===========================================================
 'Check a date field for validation purposes dateness returns true based on the supplied parameters
 'test_val is a variant and will accept any object type using Error Handling to catch any issues and return False
 'if test_val is a legitimate date the following parameters are available
@@ -455,7 +311,6 @@ End Function
 'contains (String) - Check is a string contains a specified string (can be used with case_sensitive)
 'matches (String) - Check is a string matches a given regex pattern (case sensitive has no effect on this method)
 'case_sensitive (Boolean) - to be used in conjunction with begins_with, ends_with, and contains
-'strict (Boolean) - if strict it validates test_val as is otherwise it attempts to make it a string before testing
 
 
 'Options can be used in conjunction with each other
@@ -476,17 +331,11 @@ Optional begins_with As String, _
 Optional ends_with As String, _
 Optional contains As String, _
 Optional matches As String, _
-Optional case_sensitive As Boolean = False, _
-Optional strict As Boolean = False _
+Optional case_sensitive As Boolean = False _
 ) As Boolean
 On Error GoTo Failure
     Dim result As Boolean
     Dim match_case As String
-    
-    If Not (strict) Then
-        test_val = CStr(true_val)
-    End If
-    
     If case_sensitive Then
         match_case = "(Case Sensitive)"
     Else
@@ -496,7 +345,7 @@ On Error GoTo Failure
         result = append_error(allow_null, "cannot be null.")
     ElseIf test_val = "" Then
         result = append_error(allow_blank, "cannot be blank")
-    ElseIf VarType(test_val) <> vbString And strict Then
+    ElseIf VarType(test_val) <> vbString Then
         result = append_error(False, "must be a string.")
     Else
         result = True
@@ -524,6 +373,7 @@ On Error GoTo Failure
         End If
         
     End If
+    
     stringness = result
 Exit_Stringness:
     Exit Function
@@ -531,12 +381,11 @@ Failure:
     stringness = False
     GoTo Exit_Stringness
 End Function
-
+'[END]==============================================================stringness==============================================================[END]
 'Checks to see if a String was supplied since default value is empty String
 Private Function string_supplied(val As String) As Boolean
     string_supplied = val <> ""
 End Function
-
 'Checks the length of a string based on a specified length, min length or max length
 Private Function check_length(length As Integer, Optional min As Boolean = False, Optional max As Boolean = False) As Boolean
     If min Then
@@ -547,7 +396,6 @@ Private Function check_length(length As Integer, Optional min As Boolean = False
         check_length = Len(test_val) = length
     End If
 End Function
-
 'Checks a string for a substring based on begins, ends, or contains and case sensitivity
 Private Function check_sub_string(sub_string As String, _
 Optional begins As Boolean = False, _
@@ -578,7 +426,106 @@ Private Function check_pattern(pattern As String) As Boolean
             check_pattern = .test(test_val)
         End With
 End Function
-'[END]==============================================================stringness==============================================================[END]
+
+'[BEGIN]===========================================vinness======================================================[BEGIN]
+Public Function vinness() As Boolean
+On Error GoTo Failure
+    vinnessOf = True
+    
+    append_error check_length(17), "must be 17 digits."
+    append_error Not (check_pattern("[IOQ]")), "cannot contain characters I, O, or Q."
+
+    
+    Dim vin_array As Variant
+    Dim check_digit As Variant
+    Dim total As Integer
+    Dim eval_value As Integer
+    
+
+    vin_array = Split(StrConv(test_val, 64), Chr(0))
+    
+    check_digit = vin_array(8)
+    
+    'IsNumeric was used here because it is only checking a single character
+    If Not IsNumeric(check_digit) Then
+        check_digit = 10
+    End If
+    
+    total = 0
+    
+    For i = 0 To UBound(vin_array) - 1
+        If IsNumeric(vin_array(i)) Then
+            eval_value = vin_array(i)
+        Else
+            eval_value = transliterate(CStr(vin_array(i)))
+        End If
+        
+        total = total + eval_value * getWeight(CInt(i))
+    Next i
+    
+    vinness = append_error(total Mod 11 = check_digit, "fails check digit.")
+Exit_vinness:
+    Exit Function
+Failure:
+    vinness = False
+    GoTo Exit_vinness
+End Function
+
+Private Function getWeight(location As Integer) As Integer
+    Dim weight As Integer
+    Select Case location
+        Case 0, 10
+            weight = 8
+        Case 1, 11
+            weight = 7
+        Case 2, 12
+            weight = 6
+        Case 3, 13
+            weight = 5
+        Case 4, 14
+            weight = 4
+        Case 5, 15
+            weight = 3
+        Case 6, 16
+            weight = 2
+        Case 7
+            weight = 10
+        Case 8
+            weight = 0
+        Case 9
+            weight = 9
+        Case Else
+            weight = 0
+    End Select
+    getWeight = weight
+End Function
+Private Function transliterate(letter As String) As Integer
+    Dim trans_val As Integer
+    Select Case letter
+        Case "A", "J"
+            trans_val = 1
+        Case "B", "K", "S"
+            trans_val = 2
+        Case "C", "L", "T"
+            trans_val = 3
+        Case "D", "M", "U"
+            trans_val = 4
+        Case "E", "N", "V"
+            trans_val = 5
+        Case "F", "W"
+            trans_val = 6
+        Case "G", "P", "X"
+            trans_val = 7
+        Case "H", "Y"
+            trans_val = 8
+        Case "R", "Z"
+            trans_val = 9
+        Case Else
+            trans_val = 0
+    End Select
+    transliterate = trans_val
+End Function
+'[END]===========================================vinness======================================================[END]
 
 
 '===================================================Shared Private Methods for Validation Functions============================================
@@ -624,10 +571,3 @@ Private Function check_other_than(other As Variant) As Boolean
     check_other_than = test_val <> other
 End Function
 
-'Checks if an item exists in a colleciton by catching the non existent Error
-Private Function in_collection(coll As Collection, key As String) As Boolean
-On Error Resume Next
-    Err.Clear
-    coll.Item (key)
-    in_collection = Not (CLng(Err.Number) = 5)
-End Function
