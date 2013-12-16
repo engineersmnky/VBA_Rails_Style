@@ -30,7 +30,7 @@ Usage:
             .validates "String", "String", 
                 .stringness length:=6, contains:="ing", begins_with:="S"
             .validates "12345","Number2",
-                .numericality greater_than:=12344, force:=vbInteger, 
+                .numericality greater_than:=12344, force:=vbInteger
                 .stringness min_length:=3, begins_with:="1"
        End With
 
